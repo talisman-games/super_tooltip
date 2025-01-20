@@ -629,6 +629,56 @@ class _SuperTooltipState extends State<SuperTooltip>
             ),
           )
         : null;
+
+    final tooltip = Container(
+      key: SuperTooltip.bubbleKey,
+      margin: SuperUtils.getTooltipMargin(
+        arrowLength: widget.arrowLength,
+        arrowTipDistance: widget.arrowTipDistance,
+        closeButtonSize: closeButtonSize,
+        preferredDirection: preferredDirection,
+        closeButtonType: closeButtonType,
+        showCloseButton: showCloseButton,
+      ),
+      padding: SuperUtils.getTooltipPadding(
+        closeButtonSize: closeButtonSize,
+        closeButtonType: closeButtonType,
+        showCloseButton: showCloseButton,
+      ),
+      decoration: widget.decorationBuilder != null
+          ? widget.decorationBuilder!(target)
+          : ShapeDecoration(
+              color: backgroundColor,
+              shadows: hasShadow
+                  ? widget.boxShadows ??
+                      <BoxShadow>[
+                        BoxShadow(
+                          blurRadius: shadowBlurRadius,
+                          spreadRadius: shadowSpreadRadius,
+                          color: shadowColor,
+                          offset: shadowOffset,
+                        ),
+                      ]
+                  : null,
+              shape: BubbleShape(
+                arrowBaseWidth: widget.arrowBaseWidth,
+                arrowTipDistance: widget.arrowTipDistance,
+                arrowTipRadius: widget.arrowTipRadius,
+                borderColor: widget.borderColor,
+                borderRadius: widget.borderRadius,
+                borderWidth: widget.borderWidth,
+                bottom: bottom,
+                left: left,
+                preferredDirection: preferredDirection,
+                right: right,
+                target: target,
+                top: top,
+                bubbleDimensions: widget.bubbleDimensions,
+              ),
+            ),
+      child: widget.content,
+    );
+
     _entry = OverlayEntry(
       builder: (BuildContext context) => FadeTransition(
         opacity: animation,
@@ -660,62 +710,20 @@ class _SuperTooltipState extends State<SuperTooltip>
                 children: <Widget>[
                   Material(
                     color: Colors.transparent,
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () {
-                        if (widget.hideTooltipOnTap) {
-                          _superTooltipController!.hideTooltip();
-                        }
-                      },
-                      child: Container(
-                        key: SuperTooltip.bubbleKey,
-                        margin: SuperUtils.getTooltipMargin(
-                          arrowLength: widget.arrowLength,
-                          arrowTipDistance: widget.arrowTipDistance,
-                          closeButtonSize: closeButtonSize,
-                          preferredDirection: preferredDirection,
-                          closeButtonType: closeButtonType,
-                          showCloseButton: showCloseButton,
-                        ),
-                        padding: SuperUtils.getTooltipPadding(
-                          closeButtonSize: closeButtonSize,
-                          closeButtonType: closeButtonType,
-                          showCloseButton: showCloseButton,
-                        ),
-                        decoration: widget.decorationBuilder != null
-                            ? widget.decorationBuilder!(target)
-                            : ShapeDecoration(
-                                color: backgroundColor,
-                                shadows: hasShadow
-                                    ? widget.boxShadows ??
-                                        <BoxShadow>[
-                                          BoxShadow(
-                                            blurRadius: shadowBlurRadius,
-                                            spreadRadius: shadowSpreadRadius,
-                                            color: shadowColor,
-                                            offset: shadowOffset,
-                                          ),
-                                        ]
-                                    : null,
-                                shape: BubbleShape(
-                                  arrowBaseWidth: widget.arrowBaseWidth,
-                                  arrowTipDistance: widget.arrowTipDistance,
-                                  arrowTipRadius: widget.arrowTipRadius,
-                                  borderColor: widget.borderColor,
-                                  borderRadius: widget.borderRadius,
-                                  borderWidth: widget.borderWidth,
-                                  bottom: bottom,
-                                  left: left,
-                                  preferredDirection: preferredDirection,
-                                  right: right,
-                                  target: target,
-                                  top: top,
-                                  bubbleDimensions: widget.bubbleDimensions,
-                                ),
-                              ),
-                        child: widget.content,
-                      ),
-                    ),
+                    // AA: Only wrap the tooltip in a gesture detector if the
+                    // caller wants to hide the tooltip when tapped. Otherwise
+                    // we're just absorbing input events for no reason.
+                    child: widget.hideTooltipOnTap
+                        ? GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () {
+                              if (widget.hideTooltipOnTap) {
+                                _superTooltipController!.hideTooltip();
+                              }
+                            },
+                            child: tooltip,
+                          )
+                        : tooltip,
                   ),
                   _buildCloseButton(),
                 ],
